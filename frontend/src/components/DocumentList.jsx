@@ -1,3 +1,4 @@
+import React from 'react';
 import { FileText, FolderOpen } from 'lucide-react';
 import DownloadButton from './DownloadButton.jsx';
 
