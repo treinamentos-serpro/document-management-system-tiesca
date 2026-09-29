@@ -13,7 +13,7 @@ function createUploadMiddleware(storageDir) {
 
   const upload = multer({
     storage,
-    limits: { fileSize: MAX_FILE_SIZE, files: 1 },
+    limits: { fileSize: MAX_FILE_SIZE, files: 1, fields: 0, parts: 2 },
     defParamCharset: 'utf8',
   }).single('file');
 

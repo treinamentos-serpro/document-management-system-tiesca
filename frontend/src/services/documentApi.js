@@ -14,9 +14,11 @@ async function request(path, owner, options = {}) {
   return response;
 }
 
-export async function listDocuments(owner) {
-  const response = await request('/documents', owner);
-  const { documents } = await response.json();
+export async function listDocuments(owner, signal) {
+  const response = await request('/documents', owner, { signal });
+  const body = await response.json();
+  if (!Array.isArray(body.documents)) throw new Error('Resposta inválida do servidor.');
+  const { documents } = body;
   return documents;
 }
 

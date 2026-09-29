@@ -3,10 +3,17 @@ const path = require('node:path');
 
 // Metadados em memória + arquivos no filesystem local (nome interno = UUID).
 function createDocumentRepository({ storageDir }) {
-  fs.mkdirSync(storageDir, { recursive: true });
+  const resolvedStorageDir = path.resolve(storageDir);
+  fs.mkdirSync(resolvedStorageDir, { recursive: true });
   const documents = new Map();
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  const getFilePath = (id) => path.join(storageDir, path.basename(id));
+  function getFilePath(id) {
+    if (!uuidPattern.test(id)) throw new TypeError('Identificador interno inválido.');
+    const filePath = path.resolve(resolvedStorageDir, id.toLowerCase());
+    if (path.dirname(filePath) !== resolvedStorageDir) throw new TypeError('Caminho de arquivo inválido.');
+    return filePath;
+  }
 
   function save(document) {
     documents.set(document.id, { ...document });

@@ -16,21 +16,21 @@ export default function App() {
   useEffect(() => {
     if (!activeUser) return;
 
-    let current = true;
+    const controller = new AbortController();
     setLoading(true);
     setError('');
-    listDocuments(activeUser)
+    listDocuments(activeUser, controller.signal)
       .then((items) => {
-        if (current) setDocuments(items);
+        setDocuments(items);
       })
       .catch((cause) => {
-        if (current) setError(cause.message);
+        if (cause.name !== 'AbortError') setError(cause.message);
       })
       .finally(() => {
-        if (current) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
 
-    return () => { current = false; };
+    return () => controller.abort();
   }, [activeUser, refreshIndex]);
 
   function selectUser(event) {

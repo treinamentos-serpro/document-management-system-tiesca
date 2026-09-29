@@ -2,12 +2,14 @@ const { pipeline } = require('node:stream');
 const { AppError, validationError } = require('../services/app-error');
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_OWNER_LENGTH = 256;
 
 function createDocumentController({ service }) {
   // Deve rodar antes do multer para não gravar arquivos de requisições inválidas.
   function requireUserId(req, res, next) {
     const owner = (req.get('X-User-Id') || '').trim();
     if (!owner) return next(validationError('Informe o header X-User-Id.'));
+    if (owner.length > MAX_OWNER_LENGTH) return next(validationError('O identificador do usuário é muito longo.'));
     req.owner = owner;
     next();
   }

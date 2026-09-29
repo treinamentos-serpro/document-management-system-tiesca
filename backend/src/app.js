@@ -17,22 +17,27 @@ const { createDocumentService } = require('./services/document.service');
 const { createDocumentController, errorHandler } = require('./controllers/document.controller');
 const { createDocumentRouter } = require('./routes/document.routes');
 
-const app = express();
 const PORT = process.env.PORT || 3000;
-const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, '..', 'storage');
 
-const repository = createDocumentRepository({ storageDir: STORAGE_DIR });
-const service = createDocumentService({ repository });
-const controller = createDocumentController({ service });
+function createApp({ storageDir = process.env.STORAGE_DIR || path.join(__dirname, '..', 'storage') } = {}) {
+  const app = express();
+  const repository = createDocumentRepository({ storageDir });
+  const service = createDocumentService({ repository });
+  const controller = createDocumentController({ service });
 
-app.use(express.json());
+  app.use(express.json());
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+  });
 
-app.use(createDocumentRouter({ controller, storageDir: STORAGE_DIR }));
-app.use(errorHandler);
+  app.use(createDocumentRouter({ controller, storageDir }));
+  app.use(errorHandler);
+
+  return app;
+}
+
+const app = createApp();
 
 if (require.main === module) {
   app.listen(PORT, () => {
@@ -41,3 +46,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.createApp = createApp;
