@@ -48,6 +48,12 @@ test('a API isola proprietários e rejeita traversal no download', async (t) => 
 
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}`;
+  const emptyListResponse = await fetch(`${baseUrl}/documents`, {
+    headers: { 'X-User-Id': 'owner-a' },
+  });
+  assert.strictEqual(emptyListResponse.status, 200);
+  assert.deepStrictEqual((await emptyListResponse.json()).documents, []);
+
   const form = new FormData();
   form.append('file', new Blob(['conteudo de teste'], { type: 'text/plain' }), 'teste.txt');
   const uploadResponse = await fetch(`${baseUrl}/upload`, {
@@ -58,6 +64,22 @@ test('a API isola proprietários e rejeita traversal no download', async (t) => 
   const uploadBody = await uploadResponse.json();
   assert.strictEqual(uploadResponse.status, 201, JSON.stringify(uploadBody));
   const { document } = uploadBody;
+
+  const listResponse = await fetch(`${baseUrl}/documents`, {
+    headers: { 'X-User-Id': 'owner-a' },
+  });
+  assert.strictEqual(listResponse.status, 200);
+  const listedDocuments = (await listResponse.json()).documents;
+  assert.strictEqual(listedDocuments.length, 1);
+  assert.strictEqual(listedDocuments[0].id, document.id);
+  assert.strictEqual(listedDocuments[0].originalName, 'teste.txt');
+  assert.strictEqual(listedDocuments[0].size, Buffer.byteLength('conteudo de teste'));
+
+  const otherOwnerListResponse = await fetch(`${baseUrl}/documents`, {
+    headers: { 'X-User-Id': 'owner-b' },
+  });
+  assert.strictEqual(otherOwnerListResponse.status, 200);
+  assert.deepStrictEqual((await otherOwnerListResponse.json()).documents, []);
 
   const otherOwnerResponse = await fetch(`${baseUrl}/documents/${document.id}/download`, {
     headers: { 'X-User-Id': 'owner-b' },
